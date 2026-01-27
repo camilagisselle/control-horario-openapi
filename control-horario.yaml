@@ -1,0 +1,97 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: CONTROL-HORARIO-API
+  description: 'AGREGAR DESCRIPCION'
+
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: HOST del api de control horario
+    url: 'https://$(host)/control-horario-api'
+paths:
+  /v1/control-horario/usuario:
+    post:
+      tags:
+        - USUARIO
+      summary: Administrar usuarios
+      operationId: v1Aammb2prPostGpi
+      description: Administrar usuarios
+      requestBody:
+        description: Optional description in *Markdown*
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Usuario"
+      responses:
+        '200':
+          description: Muestra el objeto Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          $ref: '#/components/responses/400'
+        '409':
+          $ref: '#/components/responses/409'
+components:
+  responses:
+    '400':
+      description: Error 400 Llamada con data insuficiente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            default:
+              value:
+                code: '400'
+                message: Bad Request
+                level: Level
+                description: Bad Request
+    '409':
+      description: Error 409 Ocurre cuándo se define un estado que no se pudo lograr o que ya se tenía
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            default:
+              value:
+                code: '409'
+                message: Conflict
+                level: Level
+                description: Conflict
+  schemas:
+    Usuario:
+      type: object
+      required:
+        - nombre
+        - correo
+        - password
+        - estado
+      properties:
+        nombre:
+          type: string
+          example: Jose Perez
+        correo:
+          type: string
+          example: 'jperez@correo.cl'
+        password:
+          type: string
+          example: '12345'
+        estado:
+          type: string
+          example: '1'
+          description: "1: activo, 2: inactivo"
+    error:
+      type: object
+      properties:
+        code:
+          type: string
+        level:
+          type: string
+        description:
+          type: string
+        message:
+          type: string
