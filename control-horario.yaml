@@ -15,7 +15,7 @@ tags:
   - name: Historial
 
 paths:
-  /v1/control-horario/auth/login:
+  /v1/control-horario/login:
     post:
       tags:
         - Auth
@@ -38,7 +38,7 @@ paths:
         "401":
           description: Credenciales inválidas
 
-  /v1/control-horario/usuarios:
+  /v1/control-horario/usuario:
     get:
       tags:
         - Usuarios
@@ -77,14 +77,14 @@ paths:
         "409":
           $ref: "#/components/responses/409"
 
-  /v1/control-horario/usuarios/{id}:
+  /v1/control-horario/usuario/{correo}:
     get:
       tags:
         - Usuarios
-      summary: Obtener usuario por id
+      summary: Obtener usuario por correo
       operationId: obtenerUsuario
       parameters:
-        -  name: id
+        -  name: correo
            in: path
            required: true
            schema:
@@ -111,7 +111,7 @@ paths:
       summary: Actualizar usuario
       operationId: actualizarUsuario
       parameters:
-        - name: id
+        - name: correo
           in: path
           required: true
           schema:
@@ -129,10 +129,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UsuarioResponse'
-          '400':
-            $ref: '#/components/responses/400'
+        '400':
+          $ref: '#/components/responses/400'
 
-  /v1/control-horario/perfiles:
+  /v1/control-horario/perfil:
     get:
       tags:
         - Perfiles
@@ -152,11 +152,27 @@ paths:
     get:
       tags:
         - Historial
+      summary: Listar historial de todos los usuarios
+      operationId: listarHistorial
+      responses:
+        "200":
+          description: Lista de historial de todos los usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistorialRequest"
+
+  /v1/control-horario/historial/{correo}:
+    get:
+      tags:
+        - Historial
       summary: Obtener historial por correo de usuario
       operationId: obtenerHistorial
       parameters:
         - name: correo
-          in: query
+          in: path
           required: true
           schema:
             type: string
@@ -169,7 +185,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Historial"
+                  $ref: "#/components/schemas/HistorialRequest"
 
     post:
       tags:
@@ -187,7 +203,8 @@ paths:
           description: Marcacion registrada
         "400":
           $ref: "#/components/responses/400"
-        put:
+  /v1/control-horario/historial/{id}:
+    put:
       tags:
         - Historial
       summary: Actualizar marcación de colación o salida
@@ -214,7 +231,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Historial"
+                $ref: "#/components/schemas/HistorialRequest"
         "400":
           $ref: "#/components/responses/400"
         "404":
@@ -239,150 +256,137 @@ components:
     LoginRequest:
       type: object
       required: [correo, password]
-       properties:
-      correo:
-        type: string
-        format: email
-      password:
-        type: string
-        format: password
+      properties:
+        correo:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
 
     LoginResponse:
-    type: object
-    properties:
-      token:
-        type: string
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
-      perfil:
-        type: string
-        example: ADMIN
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        perfil:
+          type: string
+          example: ADMIN
 
+    UsuarioRequest:
+      type: object
+      required: [nombre, correo, password, estado, perfil_id]
+      properties:
+        nombre:
+          type: string
+          example: Jose Perez
+        correo:
+          type: string
+          format: email
+          example: "jperez@correo.cl"
+        password:
+          type: string
+          format: password
+          example: "12345"
+        estado:
+          type: integer
+          enum: [1, 2]
+          example: 1
+          description: "1: activo, 2: inactivo"
+        perfil_id:
+          type: integer
+          example: 1
 
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Jose Perez
+        correo:
+          type: string
+          format: email
+          example: jperez@correo.cl
+        estado:
+          type: integer
+          example: 1
+        perfil:  
+          $ref: '#/components/schemas/Perfil'
 
-  UsuarioRequest:
-    type: object
-    required: [nombre, correo, password, estado, perfil_id]
-    properties:
-      nombre:
-        type: string
-        example: Jose Perez
-      correo:
-        type: string
-        format: email
-        example: "jperez@correo.cl"
-      password:
-        type: string
-        format: password
-        example: "12345"
-      estado:
-        type: integer
-        enum: [1, 2]
-        example: 1
-        description: "1: activo, 2: inactivo"
-      perfil_id:
-        type: integer
-        example: 1
+    UsuarioUpdateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: Jose Perez
+        estado:
+          type: integer
+          enum: [1, 2]
+          example: 1
+          description: "1: activo, 2: inactivo"
+        perfil_id:
+          type: integer
+          example: 2
 
-  UsuarioResponse:
-    type: object
-    properties:
-      id:
-        type: integer
-        example: 1
-      nombre:
-        type: string
-        example: Jose Perez
-      correo:
-        type: string
-        format: email
-        example: jperez@correo.cl
-      estado:
-        type: integer
-        example: 1
-      perfil: $ref:'#/components/schemas/Perfil'
+    Perfil:
+      type: object
+      properties:
+        perfil_id:
+          type: integer
+          example: 1
+        nombre_perfil:
+          type: string
+          example: ADMIN
 
-  UsuarioUpdateRequest:
-    type: object
-    properties:
-      nombre:
-        type: string
-        example: Jose Perez
-      estado:
-        type: integer
-        enum: [1, 2]
-        example: 1
-        description: "1: activo, 2: inactivo"
-      perfil_id:
-        type: integer
-        example: 2
+    HistorialUpdateRequest:
+      type: object
+      properties:
+        inicioColacion:
+          type: string
+          format: time
+          example: "13:00"
+        finColacion:
+          type: string
+          format: time
+          example: "14:00"
+        salida:
+          type: string
+          format: time
+          example: "18:00"
 
-  Perfil:
-    type: object
-    properties:
-      perfil_id:
-        type: integer
-        example: 1
-      nombre_perfil:
-        type: string
-        example: ADMIN
+    HistorialRequest:
+      type: object
+      required: [fecha, entrada]
+      properties:
+        fecha:
+          type: string
+          format: date
+        entrada:
+          type: string
+          format: time
+        inicioColacion:
+          type: string
+          format: time
+        finColacion:
+          type: string
+          format: time
+        salida:
+          type: string
+          format: time
 
-  HistorialUpdateRequest:
-    type: object
-    properties:
-      inicioColacion:
-        type: string
-        format: time
-        example: "13:00"
-      finColacion:
-        type: string
-        format: time
-        example: "14:00"
-      salida:
-        type: string
-        format: time
-        example: "18:00"
-
-  HistorialRequest:
-    type: object
-    required: [correousuario, fecha, entrada]
-    properties:
-      correousuario:
-        type: string
-        format: email
-      fecha:
-        type: string
-        format: date
-      entrada:
-        type: string
-        format: time
-      inicioColacion:
-        type: string
-        format: time
-      finColacion:
-        type: string
-        format: time
-      salida:
-        type: string
-        format: time
-
-  Historial:
-    allOf:
-      - $ref: "#/components/schemas/HistorialRequest"
-      - type: object
-        properties:
-          id:
-            type: integer
-            example: 10
-
-  Error:
-    type: object
-    properties:
-      code:
-        type: string
-        example: Bad Request
-      level:
-        type: string
-        example: ERROR
-      description:
-        type: string
-        example: Datos inválidos
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: Bad Request
+        level:
+          type: string
+          example: ERROR
+        description:
+          type: string
+          example: Datos inválidos
