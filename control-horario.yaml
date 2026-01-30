@@ -2,96 +2,391 @@ openapi: 3.0.3
 info:
   version: 1.0.0
   title: CONTROL-HORARIO-API
-  description: 'AGREGAR DESCRIPCION'
+  description: API para el control horario Krono
 
 servers:
-  # Added by API Auto Mocking Plugin
-  - description: HOST del api de control horario
-    url: 'https://$(host)/control-horario-api'
+  - description: Entorno local
+    url: "http://localhost:8080/control-horario-api"
+
+tags:
+  - name: Auth
+  - name: Usuarios
+  - name: Perfiles
+  - name: Historial
+
 paths:
-  /v1/control-horario/usuario:
+  /v1/control-horario/login:
     post:
       tags:
-        - USUARIO
-      summary: Administrar usuarios
-      operationId: v1Aammb2prPostGpi
-      description: Administrar usuarios
+        - Auth
+      summary: Autenticacion de usuario
+      description: Permite inicar sesion y obtener un token de JWT
+      operationId: login
       requestBody:
-        description: Optional description in *Markdown*
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Usuario"
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
-          description: Muestra el objeto Usuario creado
+        "200":
+          description: Login exitoso
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Usuario'
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Credenciales inválidas
+
+  /v1/control-horario/usuario:
+    get:
+      tags:
+        - Usuarios
+      summary: Listar usuarios
+      operationId: listarUsuarios
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UsuarioResponse"
+
+    post:
+      tags:
+        - Usuarios
+      summary: crear usuario
+      operationId: crearUsuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioRequest"
+      responses:
+        "201":
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsuarioResponse"
+        "400":
+          $ref: "#/components/responses/400"
+        "409":
+          $ref: "#/components/responses/409"
+
+  /v1/control-horario/usuario/{correo}:
+    get:
+      tags:
+        - Usuarios
+      summary: Obtener usuario por correo
+      operationId: obtenerUsuario
+      parameters:
+        -  name: correo
+           in: path
+           required: true
+           schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioRequest'     
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
+        '404':
+          description: Usuario no encontrado
+
+    put:
+      tags:
+       - Usuarios
+      summary: Actualizar usuario
+      operationId: actualizarUsuario
+      parameters:
+        - name: correo
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:  
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioRequest'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioResponse'
         '400':
           $ref: '#/components/responses/400'
-        '409':
-          $ref: '#/components/responses/409'
+
+  /v1/control-horario/perfil:
+    get:
+      tags:
+        - Perfiles
+      summary: Listar perfiles
+      operationId: listarPerfiles
+      responses:
+        "200":
+          description: Lista de perfiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Perfil"          
+
+  /v1/control-horario/historial:
+    get:
+      tags:
+        - Historial
+      summary: Listar historial de todos los usuarios
+      operationId: listarHistorial
+      responses:
+        "200":
+          description: Lista de historial de todos los usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistorialRequest"
+
+  /v1/control-horario/historial/{correo}:
+    get:
+      tags:
+        - Historial
+      summary: Obtener historial por correo de usuario
+      operationId: obtenerHistorial
+      parameters:
+        - name: correo
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        "200":
+          description: Historial del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistorialRequest"
+
+    post:
+      tags:
+        - Historial
+      summary: Registrar marcación
+      operationId: registrarMarcacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistorialRequest"
+      responses:
+        "201":
+          description: Marcacion registrada
+        "400":
+          $ref: "#/components/responses/400"
+  /v1/control-horario/historial/{id}:
+    put:
+      tags:
+        - Historial
+      summary: Actualizar marcación de colación o salida
+      description: Permite actualizar inicio colación, fin colación o salida de un historial existente
+      operationId: actualizarMarcacion
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: ID del historial a actualizar
+          schema:
+            type: integer
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistorialUpdateRequest"
+
+      responses:
+        "200":
+          description: Marcación actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistorialRequest"
+        "400":
+          $ref: "#/components/responses/400"
+        "404":
+          description: Historial no encontrado
 components:
   responses:
-    '400':
-      description: Error 400 Llamada con data insuficiente
+    "400":
+      description: Error 400 - Datos inválidos
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/error'
-          examples:
-            default:
-              value:
-                code: '400'
-                message: Bad Request
-                level: Level
-                description: Bad Request
-    '409':
-      description: Error 409 Ocurre cuándo se define un estado que no se pudo lograr o que ya se tenía
+            $ref: "#/components/schemas/Error"
+
+    "409":
+      description: Error 409 Conflicto de estado
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/error'
-          examples:
-            default:
-              value:
-                code: '409'
-                message: Conflict
-                level: Level
-                description: Conflict
+            $ref: "#/components/schemas/Error"
+
   schemas:
-    Usuario:
+    LoginRequest:
       type: object
-      required:
-        - nombre
-        - correo
-        - password
-        - estado
+      required: [correo, password]
+      properties:
+        correo:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        perfil:
+          type: string
+          example: ADMIN
+
+    UsuarioRequest:
+      type: object
+      required: [nombre, correo, password, estado, perfil_id]
       properties:
         nombre:
           type: string
           example: Jose Perez
         correo:
           type: string
-          example: 'jperez@correo.cl'
+          format: email
+          example: "jperez@correo.cl"
         password:
           type: string
-          example: '12345'
+          format: password
+          example: "12345"
         estado:
-          type: string
-          example: '1'
+          type: integer
+          enum: [1, 2]
+          example: 1
           description: "1: activo, 2: inactivo"
-    error:
+        perfil_id:
+          type: integer
+          example: 1
+
+    UsuarioResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: Jose Perez
+        correo:
+          type: string
+          format: email
+          example: jperez@correo.cl
+        estado:
+          type: integer
+          example: 1
+        perfil:  
+          $ref: '#/components/schemas/Perfil'
+
+    UsuarioUpdateRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: Jose Perez
+        estado:
+          type: integer
+          enum: [1, 2]
+          example: 1
+          description: "1: activo, 2: inactivo"
+        perfil_id:
+          type: integer
+          example: 2
+
+    Perfil:
+      type: object
+      properties:
+        perfil_id:
+          type: integer
+          example: 1
+        nombre_perfil:
+          type: string
+          example: ADMIN
+
+    HistorialUpdateRequest:
+      type: object
+      properties:
+        inicioColacion:
+          type: string
+          format: time
+          example: "13:00"
+        finColacion:
+          type: string
+          format: time
+          example: "14:00"
+        salida:
+          type: string
+          format: time
+          example: "18:00"
+
+    HistorialRequest:
+      type: object
+      required: [fecha, entrada]
+      properties:
+        fecha:
+          type: string
+          format: date
+        entrada:
+          type: string
+          format: time
+        inicioColacion:
+          type: string
+          format: time
+        finColacion:
+          type: string
+          format: time
+        salida:
+          type: string
+          format: time
+
+    Error:
       type: object
       properties:
         code:
           type: string
+          example: Bad Request
         level:
           type: string
+          example: ERROR
         description:
           type: string
-        message:
-          type: string
+          example: Datos inválidos
